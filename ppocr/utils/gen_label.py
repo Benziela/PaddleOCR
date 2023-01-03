@@ -49,6 +49,29 @@ def gen_det_label(root_path, input_dir, out_label):
             out_file.write(img_path + '\t' + json.dumps(
                 label, ensure_ascii=False) + '\n')
 
+def gen_det_label_v2(root_path, input_dir, out_label):
+    with open(out_label, 'w') as out_file:
+        for label_file in os.listdir(input_dir):
+            img_path = root_path + label_file[3:-4] + ".jpg"
+            label = []
+            with open(
+                    os.path.join(input_dir, label_file), 'r',
+                    encoding='utf-8-sig') as f:
+                for line in f.readlines():
+                    tmp = line.strip("\n\r").replace("\xef\xbb\xbf",
+                                                     "").split(',')
+                    points = tmp[:8]
+                    s = []
+                    for i in range(0, len(points), 2):
+                        b = points[i:i + 2]
+                        b = [int(t) for t in b]
+                        s.append(b)
+                    result = {"transcription": tmp[8], "points": s}
+                    label.append(result)
+
+            out_file.write(img_path + '\t' + json.dumps(
+                label, ensure_ascii=False) + '\n')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -73,9 +96,15 @@ if __name__ == "__main__":
         default="out_label.txt",
         help='Output file name')
 
-    args = parser.parse_args()
-    if args.mode == "rec":
-        print("Generate rec label")
-        gen_rec_label(args.input_path, args.output_label)
-    elif args.mode == "det":
-        gen_det_label(args.root_path, args.input_path, args.output_label)
+    # args = parser.parse_args()
+    # if args.mode == "rec":
+    #     print("Generate rec label")
+    #     gen_rec_label(args.input_path, args.output_label)
+    # elif args.mode == "det":
+    #     gen_det_label(args.root_path, args.input_path, args.output_label)
+
+    input_path = "dataset/Detection/Challenge4_Test_Task1_GT"
+    output_label = "test_icdar2015_label.txt"
+    root_path = "ch4_test_images/"
+
+    gen_det_label_v2(root_path, input_path, output_label)
